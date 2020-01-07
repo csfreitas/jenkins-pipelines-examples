@@ -2,22 +2,12 @@
 // It should map very well to what you learned in class.
 // Implement the sections marked with "TBD:"
 
-def GUID = "a8c7"
+def GUID = "sample-app"
 
 pipeline {
   agent {
-    kubernetes {
-      label "maven-skopeo-agent"
-      cloud "openshift"
-      inheritFrom "maven"
-      containerTemplate {
-        name "jnlp"
-        image "image-registry.openshift-image-registry.svc:5000/${GUID}-jenkins/jenkins-agent-appdev:latest"
-        resourceRequestMemory "2Gi"
-        resourceLimitMemory "2Gi"
-        resourceRequestCpu "2"
-        resourceLimitCpu "2"
-      }
+    node {
+      label 'maven'
     }
   }
   environment { 
@@ -25,7 +15,7 @@ pipeline {
     // Set Maven command to always include Nexus Settings
     // NOTE: Somehow an inline pod template in a declarative pipeline
     //       needs the "scl_enable" before calling maven.
-    mvnCmd = "source /usr/local/bin/scl_enable && mvn -s ./nexus_settings.xml"
+    mvnCmd = "source /usr/local/bin/scl_enable && mvn"
 
     // Images and Projects
     imageName   = "${GUID}-tasks"
@@ -96,10 +86,10 @@ pipeline {
             //      Your project name should be "${GUID}-${JOB_BASE_NAME}-${devTag}"
             //      Your project version should be ${devTag}
 
-            sh "${mvnCmd} sonar:sonar \
-                    -Dsonar.host.url=http://homework-sonarqube.apps.shared.na.openshift.opentlc.com/ \
-                    -Dsonar.projectName=${GUID}-${JOB_BASE_NAME}-${devTag} \
-                    -Dsonar.projectVersion=${devTag}"
+            //sh "${mvnCmd} sonar:sonar \
+            //      -Dsonar.host.url=http://homework-sonarqube.apps.shared.na.openshift.opentlc.com/ \
+            //        -Dsonar.projectName=${GUID}-${JOB_BASE_NAME}-${devTag} \
+            //        -Dsonar.projectVersion=${devTag}"
 
           }
         }
@@ -111,9 +101,9 @@ pipeline {
         dir('openshift-tasks') {
           echo "Publish to Nexus"
 
-          sh "${mvnCmd} deploy \
-              -DskipTests=true \
-              -DaltDeploymentRepository=nexus::default::http://homework-nexus.gpte-hw-cicd.svc.cluster.local:8081/repository/releases"
+          //sh "${mvnCmd} deploy \
+          //    -DskipTests=true \
+          //    -DaltDeploymentRepository=nexus::default::http://homework-nexus.gpte-hw-cicd.svc.cluster.local:8081/repository/releases"
 
         }
       }
@@ -174,7 +164,7 @@ pipeline {
     }
 
     // Copy Image to Nexus Container Registry
-    stage('Copy Image to Nexus Container Registry') {
+    /*stage('Copy Image to Nexus Container Registry') {
       steps {
         echo "Copy image to Nexus Container Registry"
         script {
@@ -195,7 +185,7 @@ pipeline {
 
         }
       }
-    }
+    }*/
 
     // Blue/Green Deployment into Production
     // -------------------------------------
