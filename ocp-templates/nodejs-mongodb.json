@@ -53,7 +53,7 @@
           }
         ],
         "selector": {
-          "name": "${N,AME}"
+          "name": "${NAME}"
         }
       }
     },
