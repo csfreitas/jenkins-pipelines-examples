@@ -1,8 +1,6 @@
-// This is a Declarative Jenkinsfile to be used in the homework
-// It should map very well to what you learned in class.
-// Implement the sections marked with "TBD:"
 
-def GUID = "sample-app"
+//java project artifactID
+def GUID = "${APP_NAME}"
 
 pipeline {
   agent {
@@ -12,22 +10,21 @@ pipeline {
   }
   environment { 
     // Define global variables
-    // Set Maven command to always include Nexus Settings
     // NOTE: Somehow an inline pod template in a declarative pipeline
     //       needs the "scl_enable" before calling maven.
     mvnCmd = "source /usr/local/bin/scl_enable && mvn"
 
     // Images and Projects
-    imageName   = "${GUID}-tasks"
-    devProject  = "${GUID}-tasks-dev"
-    prodProject = "${GUID}-tasks-prod"
+    imageName   = "${APP_NAME}"
+    devProject  = "${OPENSHIFT_PROJECT}"
+    prodProject = "${OPENSHIFT_PROJECT_PROD}"
 
     // Tags
     devTag      = "0.0-0"
     prodTag     = "0.0"
     
     // Blue-Green Settings
-    destApp     = "tasks-green"
+    destApp     = "${APP_NAME}-green"
     activeApp   = ""
   }
   stages {
@@ -90,7 +87,7 @@ pipeline {
             //      -Dsonar.host.url=http://homework-sonarqube.apps.shared.na.openshift.opentlc.com/ \
             //        -Dsonar.projectName=${GUID}-${JOB_BASE_NAME}-${devTag} \
             //        -Dsonar.projectVersion=${devTag}"
-
+            sleep(2) 
           }
         }
       }
@@ -104,7 +101,7 @@ pipeline {
           //sh "${mvnCmd} deploy \
           //    -DskipTests=true \
           //    -DaltDeploymentRepository=nexus::default::http://homework-nexus.gpte-hw-cicd.svc.cluster.local:8081/repository/releases"
-
+          sleep(2) 
         }
       }
     }
@@ -137,24 +134,24 @@ pipeline {
             openshift.withCluster() {        
               openshift.withProject("${devProject}") {
                 //1 Update the image on the dev deployment config
-                openshift.set("image", "dc/tasks", "tasks=image-registry.openshift-image-registry.svc:5000/${devProject}/${imageName}:${devTag}")
+                openshift.set("image", "dc/${APP_NAME}", "${APP_NAME}=image-registry.openshift-image-registry.svc:5000/${devProject}/${imageName}:${devTag}")
 
                 //2 Update the config maps with the potentially changed properties files
-                openshift.selector('configmap', 'tasks-config').delete()
-                def configmap = openshift.create('configmap', 'tasks-config', '--from-file=./configuration/application-users.properties', '--from-file=./configuration/application-roles.properties')
+                openshift.selector('configmap', '{APP_NAME}-config').delete()
+                def configmap = openshift.create('configmap', '${APP_NAME}-config', '--from-file=./configuration/application-users.properties', '--from-file=./configuration/application-roles.properties')
 
                 //3 Reeploy the dev deployment
-                openshift.selector("dc", "tasks").rollout().latest();
+                openshift.selector("dc", "${APP_NAME}").rollout().latest();
 
                 //4 Wait until the deployment is running
-                def dc = openshift.selector("dc", "tasks").object()
+                def dc = openshift.selector("dc", "${APP_NAME}").object()
                 def dc_version = dc.status.latestVersion
-                def rc = openshift.selector("rc", "tasks-${dc_version}").object()
+                def rc = openshift.selector("rc", "${APP_NAME}-${dc_version}").object()
 
-                echo "Waiting for ReplicationController tasks-${dc_version} to be ready"
+                echo "Waiting for ReplicationController ${APP_NAME}-${dc_version} to be ready"
                 while (rc.spec.replicas != rc.status.readyReplicas) {
                   sleep 5
-                  rc = openshift.selector("rc", "tasks-${dc_version}").object()
+                  rc = openshift.selector("rc", "${APP_NAME}-${dc_version}").object()
                 }
               }
             }
@@ -200,16 +197,16 @@ pipeline {
 
           openshift.withCluster() {
             openshift.withProject("${prodProject}") {
-              activeApp = openshift.selector("route", "tasks").object().spec.to.name
-              if (activeApp == "tasks-green") {
-                destApp = "tasks-blue"
+              activeApp = openshift.selector("route", "${APP_NAME}").object().spec.to.name
+              if (activeApp == "${APP_NAME}-green") {
+                destApp = "${APP_NAME}-blue"
               }
               echo "Active Application:      " + activeApp
               echo "Destination Application: " + destApp
 
               // Update the Image on the Production Deployment Config
               def dc = openshift.selector("dc/${destApp}").object()
-              dc.spec.template.spec.containers[0].image="image-registry.openshift-image-registry.svc:5000/${devProject}/${GUID}-tasks:${prodTag}"
+              dc.spec.template.spec.containers[0].image="image-registry.openshift-image-registry.svc:5000/${devProject}/${APP_NAME}:${prodTag}"
 
               // Deploy of application
               openshift.apply(dc)
@@ -245,7 +242,7 @@ pipeline {
 
           openshift.withCluster() {
             openshift.withProject("${prodProject}") {
-              def route = openshift.selector("route/tasks").object()
+              def route = openshift.selector("route/${APP_NAME}").object()
               route.spec.to.name="${destApp}"
               openshift.apply(route)
               sleep 5

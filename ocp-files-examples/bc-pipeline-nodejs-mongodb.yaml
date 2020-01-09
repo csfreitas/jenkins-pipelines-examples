@@ -2,11 +2,7 @@ kind: BuildConfig
 apiVersion: build.openshift.io/v1
 metadata:
   name: nodejs-sample-pipeline
-  namespace: redhat-examples
 spec:
-  nodeSelector: {}
-  output: {}
-  resources: {}
   successfulBuildsHistoryLimit: 5
   failedBuildsHistoryLimit: 5
   strategy:

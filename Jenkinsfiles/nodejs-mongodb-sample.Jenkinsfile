@@ -6,9 +6,6 @@ pipeline {
       label 'nodejs' 
     }
   }
-  environment {
-    OPENSHIFT_PROJECT = 'redhat-examples'
-  }
   options {
     timeout(time: 20, unit: 'MINUTES') 
   }

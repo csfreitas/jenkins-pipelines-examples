@@ -25,10 +25,14 @@
     <link rel="apple-touch-icon-precomposed" sizes="57x57" href="../dist/img/apple-touch-icon-precomposed-57.png">
     <link rel="stylesheet" href="css/patternfly.min.css" >
     <link rel="stylesheet" href="css/patternfly-additions.min.css" >
-    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.matchHeight/0.6.0/jquery.matchHeight-min.js"></script>
-    <script src="http://cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script>
+    <!-- <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script> -->
+    <script src="js/jquery-2.1.4.min.js"></script>
+    <!-- <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script> -->
+    <script src="js/bootstrap.min.js"></script>
+    <!-- <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.matchHeight/0.6.0/jquery.matchHeight-min.js"></script> -->
+    <script src="js/jquery.matchHeight-min.js"></script>
+    <!-- <script src="http://cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script> -->
+    <script src="js/jquery.dataTables.min.js"></script>
     <script src="js/patternfly.min.js"></script>
     <script src="js/demo.js"></script>
   </head>
