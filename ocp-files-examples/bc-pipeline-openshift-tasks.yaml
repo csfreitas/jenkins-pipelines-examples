@@ -1,13 +1,13 @@
 kind: BuildConfig
 apiVersion: build.openshift.io/v1
 metadata:
-  name: openshift-tasks-app
+  name: pipeline-openshift-tasks
 spec:
   successfulBuildsHistoryLimit: 5
   failedBuildsHistoryLimit: 5
   source:
     git:
-      uri: "https://github.com/openshift/ruby-hello-world"
+      uri: "https://github.com/csfreitas/jenkins-pipelines-examples.git"
   strategy:
     type: JenkinsPipeline
     jenkinsPipelineStrategy:
@@ -15,4 +15,7 @@ spec:
       env:
         - name: OPENSHIFT_PROJECT
           value: redhat-examples
-  runPolicy: Serial
+        - name: OPENSHIFT_PROJECT_PROD
+          value: redhat-examples-prod
+        - name: APP_NAME
+          value: openshift-tasks

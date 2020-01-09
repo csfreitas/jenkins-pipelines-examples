@@ -117,7 +117,7 @@ pipeline {
 
             openshift.withCluster() {
               openshift.withProject("${devProject}") {
-                openshift.selector("bc", "tasks").startBuild("--from-file=./target/openshift-tasks.war", "--wait=true")
+                openshift.selector("bc", "${APP_NAME}").startBuild("--from-file=./target/openshift-tasks.war", "--wait=true")
                 openshift.tag("${imageName}:latest", "${imageName}:${devTag}")
               }
             }
@@ -135,16 +135,20 @@ pipeline {
               openshift.withProject("${devProject}") {
                 //1 Update the image on the dev deployment config
                 openshift.set("image", "dc/${APP_NAME}", "${APP_NAME}=image-registry.openshift-image-registry.svc:5000/${devProject}/${imageName}:${devTag}")
-
+                //1.1 Set Version for DC
+                openshift.raw('set', 'env', 'dc/${APP_NAME}','VERSION=${devTag}')
                 //2 Update the config maps with the potentially changed properties files
                 openshift.selector('configmap', '{APP_NAME}-config').delete()
                 def configmap = openshift.create('configmap', '${APP_NAME}-config', '--from-file=./configuration/application-users.properties', '--from-file=./configuration/application-roles.properties')
-
+                //2.1. set volume mount the files in configmap into the deployment config 
+                openshift.raw('set','volume','dc/${APP_NAME}','--add','--name=${APP_NAME}-config','--type','configmap','--configmap-name','${APP_NAME}-config','--mount-path','/opt/eap/standalone/configuration/application-users.properties','--sub-path="application-users.properties"')
+                openshift.raw('set','volume','dc/${APP_NAME}','--add','--name=${APP_NAME}-config1','--type','configmap','--configmap-name','${APP_NAME}-config','--mount-path','/opt/eap/standalone/configuration/application-roles.properties','--sub-path="application-roles.properties"')
                 //3 Reeploy the dev deployment
                 openshift.selector("dc", "${APP_NAME}").rollout().latest();
 
                 //4 Wait until the deployment is running
                 def dc = openshift.selector("dc", "${APP_NAME}").object()
+                dc.spec.template.spec.containers[0]
                 def dc_version = dc.status.latestVersion
                 def rc = openshift.selector("rc", "${APP_NAME}-${dc_version}").object()
 
@@ -160,34 +164,36 @@ pipeline {
       }
     }
 
-    // Copy Image to Nexus Container Registry
-    /*stage('Copy Image to Nexus Container Registry') {
+    // Tag Image to Internal Container Registry
+    stage('Tag Image to Internal Container Registry - Production') {
       steps {
-        echo "Copy image to Nexus Container Registry"
+        echo "Tag image to Internal Container Registry"
         script {
-
           //Copy image to Nexus container registry
 
-          sh "skopeo copy --src-tls-verify=false \
+          /*sh "skopeo copy --src-tls-verify=false \
                           --dest-tls-verify=false \
                           --src-creds openshift:\$(oc whoami -t) \
                           --dest-creds admin:redhat docker://image-registry.openshift-image-registry.svc:5000/${devProject}/${imageName}:${devTag} docker://homework-nexus-registry.gpte-hw-cicd.svc.cluster.local:5000/${imageName}:${devTag}"
-
+          */                
           // Tag the built image with the production tag.
           openshift.withCluster() {
             openshift.withProject("${prodProject}") {
               openshift.tag("${devProject}/${imageName}:${devTag}", "${devProject}/${imageName}:${prodTag}")
             }
           }
-
         }
       }
-    }*/
+    }
 
     // Blue/Green Deployment into Production
     // -------------------------------------
     stage('Blue/Green Production Deployment') {
       steps {
+        // Input Step
+        timeout(time: 15, unit: "MINUTES") {
+            input message: 'Do you want to approve the deploy in production?', ok: 'Yes'
+        }
         script {
 
           //      Set Image, Set VERSION
@@ -214,7 +220,8 @@ pipeline {
               // Update Config Map in change config files changed in the source
               openshift.selector('configmap', "${destApp}-config").delete()
               def configmap = openshift.create("configmap", "${destApp}-config", "--from-file=./openshift-tasks/configuration/application-users.properties", "--from-file=./openshift-tasks/configuration/application-roles.properties")
-
+              //et Version for DC
+              openshift.raw('set', 'env', 'dc/${destApp}','VERSION=${destApp}:${prodTag}')
               // Deploy the inactive application.
               openshift.selector("dc", "${destApp}").rollout().latest();
 
@@ -248,7 +255,6 @@ pipeline {
               sleep 5
             }
           }
-
         }
       }
     }

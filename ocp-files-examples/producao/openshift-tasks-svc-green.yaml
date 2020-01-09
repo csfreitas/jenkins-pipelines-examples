@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: openshift-tasks-green
+  name: openshift-tasks-green
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: openshift-tasks-green
+    deploymentconfig: openshift-tasks-green
+  sessionAffinity: None
+  type: ClusterIP

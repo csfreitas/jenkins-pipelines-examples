@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: openshift-tasks-blue
+  name: openshift-tasks-blue
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: openshift-tasks-blue
+    deploymentconfig: openshift-tasks-blue
+  sessionAffinity: None
+  type: ClusterIP
