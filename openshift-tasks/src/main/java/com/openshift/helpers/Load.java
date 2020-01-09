@@ -29,14 +29,14 @@ public class Load {
             long startTime = System.currentTimeMillis();
             Logger log = Logger.getLogger(Load.class.getName());
             try {
-                log.log(Level.INFO, "INFO: Starting loop fot the given duration: " + seconds + " seconds.");
+                log.log(Level.INFO, "INFO: Starting loop fot the given duration: " + duration + " miliseconds.");
                 // Loop for the given duration
                 while (System.currentTimeMillis() - startTime < duration) {
                     if (System.currentTimeMillis() % 100 == 0) {
                         Thread.sleep((long) Math.floor((1 - load) * 100));
                     }
                 }
-                log.log(Level.INFO, "INFO: Ending loop after: " + seconds + " seconds.");
+                log.log(Level.INFO, "INFO: Ending loop after: " + duration + " miliseconds.");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
