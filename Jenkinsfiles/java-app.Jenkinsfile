@@ -214,6 +214,10 @@ pipeline {
               echo "Active Application:      " + activeApp
               echo "Destination Application: " + destApp
 
+              // Set Version for DC
+              echo "Production Application Tag: ${prodTag}"
+              openshift.raw('set', 'env', 'dc/${destApp}',"VERSION=${destApp}:${prodTag}")
+
               // Update the Image on the Production Deployment Config
               def dc = openshift.selector("dc/${destApp}").object()
               dc.spec.template.spec.containers[0].image="image-registry.openshift-image-registry.svc:5000/${devProject}/${APP_NAME}:${prodTag}"
@@ -224,8 +228,7 @@ pipeline {
               // Update Config Map in change config files changed in the source
               openshift.selector('configmap', "${destApp}-config").delete()
               def configmap = openshift.create("configmap", "${destApp}-config", "--from-file=./openshift-tasks/configuration/application-users.properties", "--from-file=./openshift-tasks/configuration/application-roles.properties")
-              //et Version for DC
-              openshift.raw('set', 'env', 'dc/${destApp}',"VERSION=${destApp}:${prodTag}")
+
               // Deploy the inactive application.
               openshift.selector("dc", "${destApp}").rollout().latest();
 
