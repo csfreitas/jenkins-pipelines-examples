@@ -146,8 +146,8 @@ pipeline {
                 //2 Update the config maps with the potentially changed properties files
                 openshift.selector('configmap', '${APP_NAME}-config').delete()
                 def configmap = openshift.create('configmap', '${APP_NAME}-config', '--from-file=./configuration/application-users.properties', '--from-file=./configuration/application-roles.properties')
-                               //3 Reeploy the dev deployment
-
+                
+                //3 Reeploy the dev deployment
                 openshift.selector("dc", "${APP_NAME}").rollout().latest();
 
                 //4 Wait until the deployment is running
@@ -225,7 +225,7 @@ pipeline {
               openshift.selector('configmap', "${destApp}-config").delete()
               def configmap = openshift.create("configmap", "${destApp}-config", "--from-file=./openshift-tasks/configuration/application-users.properties", "--from-file=./openshift-tasks/configuration/application-roles.properties")
               //et Version for DC
-              openshift.raw('set', 'env', 'dc/${destApp}','VERSION=${destApp}:${prodTag}')
+              openshift.raw('set', 'env', 'dc/${destApp}',"VERSION=${destApp}:${prodTag}")
               // Deploy the inactive application.
               openshift.selector("dc", "${destApp}").rollout().latest();
 
