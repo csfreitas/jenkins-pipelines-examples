@@ -145,7 +145,7 @@ pipeline {
                 //3 Reeploy the dev deployment
                 //3.1 Set Version for DC
                 echo "App version: ${devTag}"
-                openshift.raw('set', 'env', 'dc/${APP_NAME}','VERSION=${devTag}')
+                openshift.raw('set', 'env', 'dc/${APP_NAME}',"VERSION=${devTag}")
                 openshift.selector("dc", "${APP_NAME}").rollout().latest();
 
                 //4 Wait until the deployment is running
