@@ -90,7 +90,6 @@ objects:
         kind: ImageStreamTag
         name: ${APP_NAME}:latest
     source:
-      contextDir: ${CONTEXT_DIR}
       git:
         ref: ${SOURCE_REPOSITORY_REF}
         uri: ${SOURCE_REPOSITORY_URL}
@@ -203,6 +202,10 @@ objects:
           name: ${APP_NAME}:latest
       type: ImageChange
     - type: ConfigChange
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: ${APP_NAME}
 parameters:
 - description: Nome da aplicacao
   displayName: Nome da aplicacao

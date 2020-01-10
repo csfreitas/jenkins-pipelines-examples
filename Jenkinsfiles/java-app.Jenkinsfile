@@ -140,8 +140,8 @@ pipeline {
                 openshift.selector('configmap', '${APP_NAME}-config').delete()
                 def configmap = openshift.create('configmap', '${APP_NAME}-config', '--from-file=./configuration/application-users.properties', '--from-file=./configuration/application-roles.properties')
                 //2.1. set volume mount the files in configmap into the deployment config 
-                openshift.raw('set','volume','dc/${APP_NAME}','--add','--name=${APP_NAME}-config','--type','configmap','--configmap-name','${APP_NAME}-config','--mount-path','/opt/eap/standalone/configuration/application-users.properties','--sub-path="application-users.properties"')
-                openshift.raw('set','volume','dc/${APP_NAME}','--add','--name=${APP_NAME}-config1','--type','configmap','--configmap-name','${APP_NAME}-config','--mount-path','/opt/eap/standalone/configuration/application-roles.properties','--sub-path="application-roles.properties"')
+                openshift.raw('set','volume','dc/${APP_NAME}','--add','--name=${APP_NAME}-config','--type','configmap','--configmap-name','${APP_NAME}-config','--mount-path','/opt/eap/standalone/configuration/application-users.properties','--sub-path="application-users.properties"','--overwrite')
+                openshift.raw('set','volume','dc/${APP_NAME}','--add','--name=${APP_NAME}-config1','--type','configmap','--configmap-name','${APP_NAME}-config','--mount-path','/opt/eap/standalone/configuration/application-roles.properties','--sub-path="application-roles.properties"','--overwrite')
                 //3 Reeploy the dev deployment
                 //3.1 Set Version for DC
                 echo "App version: ${devTag}"
